@@ -23,6 +23,16 @@ export function ModelTraining() {
   const [isTraining, setIsTraining] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isTensorFlowAvailable, setIsTensorFlowAvailable] = useState(false);
+
+  const checkTensorFlowAvailability = async () => {
+    try {
+      const tf = await import('@tensorflow/tfjs');
+      setIsTensorFlowAvailable(tf && typeof tf.tensor === 'function');
+    } catch {
+      setIsTensorFlowAvailable(false);
+    }
+  };
 
   const fetchModelState = async () => {
     try {
@@ -30,7 +40,10 @@ export function ModelTraining() {
       const data = await response.json();
       
       if (data.success) {
-        setModelState(data.data);
+        setModelState({
+          ...data.data,
+          isTensorFlowAvailable // Use client-side detection
+        });
       } else {
         setError(data.error || 'Failed to fetch model state');
       }
@@ -69,6 +82,7 @@ export function ModelTraining() {
   };
 
   useEffect(() => {
+    checkTensorFlowAvailability();
     fetchModelState();
   }, []);
 
@@ -194,9 +208,9 @@ export function ModelTraining() {
               <div>
                 <div className="text-xs text-gray-500">TensorFlow.js</div>
                 <div className={`text-sm font-medium ${
-                  modelState.isTensorFlowAvailable ? 'text-green-600' : 'text-red-600'
+                  isTensorFlowAvailable ? 'text-green-600' : 'text-red-600'
                 }`}>
-                  {modelState.isTensorFlowAvailable ? 'Available' : 'Not Available'}
+                  {isTensorFlowAvailable ? 'Available' : 'Not Available'}
                 </div>
               </div>
             </div>
@@ -206,7 +220,7 @@ export function ModelTraining() {
           <div className="flex flex-col sm:flex-row gap-3">
             <button
               onClick={() => trainModels(false)}
-              disabled={isTraining || !modelState.isTensorFlowAvailable}
+              disabled={isTraining || !isTensorFlowAvailable}
               className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
             >
               {isTraining ? (
@@ -219,7 +233,7 @@ export function ModelTraining() {
 
             <button
               onClick={() => trainModels(true)}
-              disabled={isTraining || !modelState.isTensorFlowAvailable}
+              disabled={isTraining || !isTensorFlowAvailable}
               className="flex items-center justify-center gap-2 px-4 py-2 bg-orange-600 text-white rounded hover:bg-orange-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
             >
               <RefreshCw className="h-4 w-4" />
@@ -248,7 +262,7 @@ export function ModelTraining() {
             </div>
           </div>
 
-          {!modelState.isTensorFlowAvailable && (
+          {!isTensorFlowAvailable && (
             <div className="bg-yellow-50 p-4 rounded-lg">
               <h3 className="text-sm font-medium text-yellow-800 mb-2">TensorFlow.js Not Available</h3>
               <p className="text-xs text-yellow-700">
