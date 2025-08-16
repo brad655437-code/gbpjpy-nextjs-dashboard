@@ -51,7 +51,7 @@ export function PerformanceMetrics() {
       } else {
         setError(data.error || 'Failed to fetch performance data');
       }
-    } catch (err) {
+    } catch {
       setError('Network error occurred');
     } finally {
       setLoading(false);
@@ -150,7 +150,7 @@ export function PerformanceMetrics() {
             <div className={`text-2xl font-bold ${getPnLColor(performance.period.profitLoss)}`}>
               {performance.period.profitLoss >= 0 ? '+' : ''}${performance.period.profitLoss}
             </div>
-            <div className="text-sm text-gray-600">P&L</div>
+            <div className="text-sm text-gray-600">P&amp;L</div>
             <div className="text-xs text-gray-500 mt-1">
               {selectedPeriod} days
             </div>
@@ -198,7 +198,7 @@ export function PerformanceMetrics() {
                 <span className="font-medium">{(performance.overall.avgConfidence * 100).toFixed(1)}%</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Total P&L:</span>
+                <span className="text-gray-600">Total P&amp;L:</span>
                 <span className={`font-medium ${getPnLColor(performance.overall.profitLoss)}`}>
                   ${performance.overall.profitLoss}
                 </span>

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { mockPredictor } from '@/lib/ml-models/mock-predictor';
 import { generateCompleteDataset } from '@/lib/data/dummy-data';
+import type { ModelPerformanceMetrics } from '@/lib/ml-models/types';
 
 export async function GET(request: NextRequest) {
   try {
@@ -40,7 +41,40 @@ export async function GET(request: NextRequest) {
       }
     }
     
-    const responseData: any = {
+    const responseData: {
+      overall: ModelPerformanceMetrics;
+      period: {
+        days: number;
+        accuracy: number;
+        totalPredictions: number;
+        correctPredictions: number;
+        profitLoss: number;
+        avgConfidence: number;
+      };
+      streaks: {
+        current: number;
+        longestWin: number;
+        longestLoss: number;
+      };
+      modelInfo: {
+        name: string;
+        version: string;
+        strategy: string;
+        lastTrained: Date;
+        isTraining: boolean;
+        isActive: boolean;
+      };
+      lastUpdated: string;
+      backtest?: {
+        totalTrades: number;
+        winRate: number;
+        totalReturn: number;
+        maxDrawdown: number;
+        avgWinAmount: number;
+        avgLossAmount: number;
+        profitFactor: number;
+      };
+    } = {
       overall: performance,
       period: {
         days: periodDays,
@@ -99,7 +133,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { action, parameters } = body;
+    const { action } = body;
     
     if (action === 'retrain') {
       const modelState = mockPredictor.getModelState();
@@ -162,7 +196,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-function calculateLongestStreak(predictions: any[], isWinStreak: boolean): number {
+function calculateLongestStreak(predictions: Array<{date: Date, isCorrect?: boolean}>, isWinStreak: boolean): number {
   let longestStreak = 0;
   let currentStreak = 0;
   

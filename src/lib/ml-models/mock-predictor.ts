@@ -1,5 +1,5 @@
 
-import { analyzeTechnicals, type IchimokuData, type RSIData } from '../indicators';
+import { analyzeTechnicals } from '../indicators';
 import type {
   PredictionInput,
   PredictionOutput,

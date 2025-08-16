@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { mockPredictor } from '@/lib/ml-models/mock-predictor';
-import { generateCompleteDataset, type MarketDataPoint } from '@/lib/data/dummy-data';
+import { generateCompleteDataset } from '@/lib/data/dummy-data';
 import type { PredictionInput } from '@/lib/ml-models/types';
 
 export async function GET() {
@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
     }
     
     const input: PredictionInput = {
-      marketData: marketData.map((d: any) => ({
+      marketData: marketData.map((d: {date: string, open: number, high: number, low: number, close: number, volume?: number}) => ({
         date: new Date(d.date),
         open: Number(d.open),
         high: Number(d.high),

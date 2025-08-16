@@ -39,7 +39,7 @@ export default function Home() {
           <section>
             <h2 className="text-2xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
               <TrendingUp className="h-6 w-6 text-blue-600" />
-              Today's Prediction
+              Today&apos;s Prediction
             </h2>
             <PredictionCard />
           </section>

@@ -33,7 +33,7 @@ export function PredictionCard() {
       } else {
         setError(data.error || 'Failed to fetch prediction');
       }
-    } catch (err) {
+    } catch {
       setError('Network error occurred');
     } finally {
       setLoading(false);
@@ -108,7 +108,7 @@ export function PredictionCard() {
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
             <Target className="h-6 w-6" />
-            Today's GBP/JPY Prediction
+            Today&apos;s GBP/JPY Prediction
           </CardTitle>
           <div className="flex items-center gap-1 text-sm text-gray-600">
             <Clock className="h-4 w-4" />
