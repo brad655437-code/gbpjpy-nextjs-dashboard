@@ -310,9 +310,14 @@ export class ModelManager {
   /**
    * Check if TensorFlow models are available
    */
-  isTensorFlowAvailable(): boolean {
+  async isTensorFlowAvailable(): Promise<boolean> {
     try {
-      return typeof window !== 'undefined' && 'tf' in window;
+      if (typeof window === 'undefined') {
+        return false; // Server-side rendering
+      }
+      
+      const tf = await import('@tensorflow/tfjs');
+      return tf && typeof tf.tensor === 'function';
     } catch {
       return false;
     }

@@ -43,7 +43,7 @@ export async function GET() {
         isInitialized: modelState.isInitialized,
         lastTrainingDate: modelState.lastTrainingDate,
         performance: modelManager.getPerformance(),
-        isTensorFlowAvailable: modelManager.isTensorFlowAvailable()
+        isTensorFlowAvailable: await modelManager.isTensorFlowAvailable()
       }
     });
   } catch (error) {
