@@ -1,5 +1,6 @@
 
 import * as tf from '@tensorflow/tfjs';
+import '@tensorflow/tfjs-backend-cpu';
 // import { analyzeTechnicals } from '../indicators';
 import type {
   PredictionInput,
@@ -291,32 +292,42 @@ export class TensorFlowPredictor {
     this.isTraining = true;
     
     try {
+      await tf.setBackend('cpu');
+      await tf.ready();
+      console.log('TensorFlow.js initialized with backend:', tf.getBackend());
+      
+      console.log('Starting model training with', trainingData.features.length, 'samples');
+      
       const lstmFeatures = this.prepareSequentialData(trainingData.features);
       const lstmLabels = tf.tensor2d(trainingData.labels.slice(this.mlConfig.sequenceLength), [trainingData.labels.length - this.mlConfig.sequenceLength, 1]);
       
       const techFeatures = tf.tensor2d(trainingData.features.slice(-1));
       const techLabels = tf.tensor2d([trainingData.labels[trainingData.labels.length - 1]], [1, 1]);
       
+      console.log('Creating LSTM model...');
       if (!this.lstmModel) {
         this.lstmModel = this.createLSTMModel([this.mlConfig.sequenceLength, trainingData.features[0].length]);
       }
       
+      console.log('Training LSTM model...');
       await this.lstmModel.fit(lstmFeatures, lstmLabels, {
         epochs: this.mlConfig.epochs,
         batchSize: this.mlConfig.batchSize,
         validationSplit: this.mlConfig.validationSplit,
-        verbose: 0
+        verbose: 1
       });
       
+      console.log('Creating technical model...');
       if (!this.technicalModel) {
         this.technicalModel = this.createTechnicalModel([trainingData.features[0].length]);
       }
       
+      console.log('Training technical model...');
       await this.technicalModel.fit(techFeatures, techLabels, {
         epochs: this.mlConfig.epochs / 2,
         batchSize: this.mlConfig.batchSize,
         validationSplit: this.mlConfig.validationSplit,
-        verbose: 0
+        verbose: 1
       });
       
       lstmFeatures.dispose();
@@ -325,6 +336,7 @@ export class TensorFlowPredictor {
       techLabels.dispose();
       
       this.config.lastTrained = new Date();
+      console.log('Model training completed successfully');
       
     } catch (error) {
       console.error('Error training models:', error);

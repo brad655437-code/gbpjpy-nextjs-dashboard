@@ -96,28 +96,43 @@ export class ModelManager {
    */
   async trainModels(_forceRetrain: boolean = false): Promise<void> {
     try {
+      console.log('ModelManager: Starting training process...');
+      
       const marketData = await getMarketData(this.config.trainingDataSize);
       
       if (marketData.length < 100) {
         throw new Error('Insufficient training data');
       }
 
+      console.log('ModelManager: Preparing training data from', marketData.length, 'market data points');
+      
       const trainingData = await this.prepareTrainingData(marketData);
       
       if (trainingData.features.length < 50) {
         throw new Error('Insufficient features for training');
       }
 
-      await tensorflowPredictor.trainModels(trainingData);
+      console.log('ModelManager: Training TensorFlow models with', trainingData.features.length, 'feature sets');
       
+      const trainingPromise = tensorflowPredictor.trainModels(trainingData);
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Training timeout after 5 minutes')), 300000)
+      );
+      
+      await Promise.race([trainingPromise, timeoutPromise]);
+      
+      console.log('ModelManager: Saving trained models...');
       await tensorflowPredictor.saveModels();
       
       this.lastTrainingDate = new Date();
       
+      console.log('ModelManager: Evaluating model performance...');
       await this.evaluateAndSwitch();
       
+      console.log('ModelManager: Training process completed successfully');
+      
     } catch (error) {
-      console.error('Error training models:', error);
+      console.error('ModelManager: Error training models:', error);
       throw error;
     }
   }
