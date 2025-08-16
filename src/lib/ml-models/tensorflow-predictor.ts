@@ -78,13 +78,13 @@ export class TensorFlowPredictor {
     };
 
     this.mlConfig = {
-      lstmUnits: 50,
-      denseUnits: 32,
-      dropoutRate: 0.2,
-      learningRate: 0.001,
-      batchSize: 32,
-      epochs: 100,
-      sequenceLength: 30,
+      lstmUnits: 16,
+      denseUnits: 8,
+      dropoutRate: 0.1,
+      learningRate: 0.01,
+      batchSize: 16,
+      epochs: 20,
+      sequenceLength: 15,
       validationSplit: 0.2
     };
 

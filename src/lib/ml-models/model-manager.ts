@@ -116,7 +116,7 @@ export class ModelManager {
       
       const trainingPromise = tensorflowPredictor.trainModels(trainingData);
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Training timeout after 5 minutes')), 300000)
+        setTimeout(() => reject(new Error('Training timeout after 15 minutes')), 900000)
       );
       
       await Promise.race([trainingPromise, timeoutPromise]);
