@@ -292,6 +292,16 @@ export class TensorFlowPredictor {
     this.isTraining = true;
     
     try {
+      if (this.lstmModel) {
+        this.lstmModel.dispose();
+        this.lstmModel = null;
+      }
+      if (this.technicalModel) {
+        this.technicalModel.dispose();
+        this.technicalModel = null;
+      }
+      
+      tf.disposeVariables();
       await tf.setBackend('cpu');
       await tf.ready();
       console.log('TensorFlow.js initialized with backend:', tf.getBackend());
@@ -305,10 +315,6 @@ export class TensorFlowPredictor {
       const techLabels = tf.tensor2d([trainingData.labels[trainingData.labels.length - 1]], [1, 1]);
       
       console.log('Creating LSTM model...');
-      if (this.lstmModel) {
-        this.lstmModel.dispose();
-        this.lstmModel = null;
-      }
       this.lstmModel = this.createLSTMModel([this.mlConfig.sequenceLength, trainingData.features[0].length]);
       
       console.log('Training LSTM model...');
@@ -320,10 +326,6 @@ export class TensorFlowPredictor {
       });
       
       console.log('Creating technical model...');
-      if (this.technicalModel) {
-        this.technicalModel.dispose();
-        this.technicalModel = null;
-      }
       this.technicalModel = this.createTechnicalModel([trainingData.features[0].length]);
       
       console.log('Training technical model...');
