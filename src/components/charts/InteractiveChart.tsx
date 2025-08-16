@@ -16,7 +16,14 @@ import {
   ReferenceLine
 } from 'recharts';
 import { getMarketData } from '@/lib/data/market-data';
-import { calculateIchimokuSeries, calculateRSISeries } from '@/lib/indicators';
+import { 
+  calculateIchimokuSeries, 
+  calculateRSISeries, 
+  calculateMACDSeries, 
+  calculateBollingerSeries, 
+  calculateFibonacciSeries, 
+  calculateVolumeSeries 
+} from '@/lib/indicators';
 import { CandlestickShape } from './CandlestickShape';
 import type { MarketDataPoint, PredictionData } from '@/lib/data/dummy-data';
 
@@ -26,6 +33,18 @@ interface ChartDataPoint extends MarketDataPoint {
   ichimokuSpanA?: number;
   ichimokuSpanB?: number;
   rsi?: number;
+  macd?: number;
+  macdSignal?: number;
+  macdHistogram?: number;
+  bollingerUpper?: number;
+  bollingerMiddle?: number;
+  bollingerLower?: number;
+  fibonacci236?: number;
+  fibonacci382?: number;
+  fibonacci500?: number;
+  fibonacci618?: number;
+  fibonacci786?: number;
+  volumeMA?: number;
   timestamp: number;
 }
 
@@ -41,6 +60,10 @@ export function InteractiveChart({ height = 600 }: InteractiveChartProps) {
   const [showIndicators, setShowIndicators] = useState({
     ichimoku: true,
     rsi: true,
+    macd: true,
+    bollinger: true,
+    fibonacci: true,
+    volume: true,
     predictions: true
   });
 
@@ -62,13 +85,24 @@ export function InteractiveChart({ height = 600 }: InteractiveChartProps) {
       const days = parseInt(timeRange);
       const marketData = await getMarketData(days);
       
-      const priceData = marketData.map(d => ({ high: d.high, low: d.low, close: d.close }));
+      const priceData = marketData.map(d => ({ high: d.high, low: d.low, close: d.close, volume: d.volume }));
+      const closePrices = marketData.map(d => d.close);
+      const volumes = marketData.map(d => d.volume || 0);
+      
       const ichimokuSeries = calculateIchimokuSeries(priceData);
-      const rsiSeries = calculateRSISeries(marketData.map(d => d.close));
+      const rsiSeries = calculateRSISeries(closePrices);
+      const macdSeries = calculateMACDSeries(closePrices);
+      const bollingerSeries = calculateBollingerSeries(closePrices);
+      const fibonacciSeries = calculateFibonacciSeries(priceData);
+      const volumeSeries = calculateVolumeSeries(volumes, closePrices);
       
       const combinedData: ChartDataPoint[] = marketData.map((point, index) => {
         const ichimokuIndex = Math.max(0, index - 51);
         const rsiIndex = Math.max(0, index - 13);
+        const macdIndex = Math.max(0, index - 34);
+        const bollingerIndex = Math.max(0, index - 19);
+        const fibonacciIndex = Math.max(0, index - 19);
+        const volumeIndex = Math.max(0, index - 19);
         
         return {
           ...point,
@@ -77,7 +111,19 @@ export function InteractiveChart({ height = 600 }: InteractiveChartProps) {
           ichimokuKijun: ichimokuSeries[ichimokuIndex]?.kijunSen,
           ichimokuSpanA: ichimokuSeries[ichimokuIndex]?.senkouSpanA,
           ichimokuSpanB: ichimokuSeries[ichimokuIndex]?.senkouSpanB,
-          rsi: rsiSeries[rsiIndex]?.value
+          rsi: rsiSeries[rsiIndex]?.value,
+          macd: macdSeries[macdIndex]?.macd,
+          macdSignal: macdSeries[macdIndex]?.signal,
+          macdHistogram: macdSeries[macdIndex]?.histogram,
+          bollingerUpper: bollingerSeries[bollingerIndex]?.upperBand,
+          bollingerMiddle: bollingerSeries[bollingerIndex]?.middleBand,
+          bollingerLower: bollingerSeries[bollingerIndex]?.lowerBand,
+          fibonacci236: fibonacciSeries[fibonacciIndex]?.levels.level236,
+          fibonacci382: fibonacciSeries[fibonacciIndex]?.levels.level382,
+          fibonacci500: fibonacciSeries[fibonacciIndex]?.levels.level500,
+          fibonacci618: fibonacciSeries[fibonacciIndex]?.levels.level618,
+          fibonacci786: fibonacciSeries[fibonacciIndex]?.levels.level786,
+          volumeMA: volumeSeries[volumeIndex]?.volumeMA
         };
       });
       
@@ -146,6 +192,42 @@ export function InteractiveChart({ height = 600 }: InteractiveChartProps) {
               className="rounded"
             />
             RSI
+          </label>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={showIndicators.macd}
+              onChange={(e) => setShowIndicators(prev => ({ ...prev, macd: e.target.checked }))}
+              className="rounded"
+            />
+            MACD
+          </label>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={showIndicators.bollinger}
+              onChange={(e) => setShowIndicators(prev => ({ ...prev, bollinger: e.target.checked }))}
+              className="rounded"
+            />
+            Bollinger Bands
+          </label>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={showIndicators.fibonacci}
+              onChange={(e) => setShowIndicators(prev => ({ ...prev, fibonacci: e.target.checked }))}
+              className="rounded"
+            />
+            Fibonacci
+          </label>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={showIndicators.volume}
+              onChange={(e) => setShowIndicators(prev => ({ ...prev, volume: e.target.checked }))}
+              className="rounded"
+            />
+            Volume
           </label>
           <label className="flex items-center gap-2 text-sm">
             <input
@@ -233,6 +315,50 @@ export function InteractiveChart({ height = 600 }: InteractiveChartProps) {
               </>
             )}
             
+            {showIndicators.bollinger && (
+              <>
+                <Line 
+                  type="monotone" 
+                  dataKey="bollingerUpper" 
+                  stroke="#8b5cf6" 
+                  strokeWidth={1}
+                  strokeDasharray="3 3"
+                  name="Bollinger Upper"
+                  dot={false}
+                  connectNulls={false}
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="bollingerMiddle" 
+                  stroke="#6b7280" 
+                  strokeWidth={1}
+                  name="Bollinger Middle"
+                  dot={false}
+                  connectNulls={false}
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="bollingerLower" 
+                  stroke="#8b5cf6" 
+                  strokeWidth={1}
+                  strokeDasharray="3 3"
+                  name="Bollinger Lower"
+                  dot={false}
+                  connectNulls={false}
+                />
+              </>
+            )}
+            
+            {showIndicators.fibonacci && (
+              <>
+                <ReferenceLine y={chartData[chartData.length - 1]?.fibonacci236} stroke="#f59e0b" strokeDasharray="2 2" label="23.6%" />
+                <ReferenceLine y={chartData[chartData.length - 1]?.fibonacci382} stroke="#f59e0b" strokeDasharray="2 2" label="38.2%" />
+                <ReferenceLine y={chartData[chartData.length - 1]?.fibonacci500} stroke="#ef4444" strokeDasharray="2 2" label="50%" />
+                <ReferenceLine y={chartData[chartData.length - 1]?.fibonacci618} stroke="#f59e0b" strokeDasharray="2 2" label="61.8%" />
+                <ReferenceLine y={chartData[chartData.length - 1]?.fibonacci786} stroke="#f59e0b" strokeDasharray="2 2" label="78.6%" />
+              </>
+            )}
+            
             {showIndicators.predictions && predictions.map((prediction, index) => (
               <ReferenceLine
                 key={`prediction-${index}`}
@@ -290,6 +416,101 @@ export function InteractiveChart({ height = 600 }: InteractiveChartProps) {
               />
               <ReferenceLine y={70} stroke="#ef4444" strokeDasharray="3 3" label="Overbought" />
               <ReferenceLine y={30} stroke="#10b981" strokeDasharray="3 3" label="Oversold" />
+            </ComposedChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+      
+      {showIndicators.macd && (
+        <div className="bg-white rounded-lg border p-4">
+          <h3 className="text-sm font-medium text-gray-700 mb-2">MACD (12,26,9)</h3>
+          <ResponsiveContainer width="100%" height={150}>
+            <ComposedChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+              <XAxis 
+                dataKey="timestamp"
+                type="number"
+                scale="time"
+                domain={['dataMin', 'dataMax']}
+                tickFormatter={formatXAxisTick}
+                stroke="#666"
+              />
+              <YAxis stroke="#666" />
+              <Tooltip 
+                labelFormatter={(timestamp) => new Date(timestamp).toLocaleDateString()}
+                contentStyle={{ 
+                  backgroundColor: 'white', 
+                  border: '1px solid #ccc',
+                  borderRadius: '8px'
+                }}
+              />
+              <Line 
+                type="monotone" 
+                dataKey="macd" 
+                stroke="#3b82f6" 
+                strokeWidth={2}
+                name="MACD"
+                dot={false}
+                connectNulls={false}
+              />
+              <Line 
+                type="monotone" 
+                dataKey="macdSignal" 
+                stroke="#ef4444" 
+                strokeWidth={2}
+                name="Signal"
+                dot={false}
+                connectNulls={false}
+              />
+              <Bar 
+                dataKey="macdHistogram" 
+                fill="#10b981"
+                name="Histogram"
+              />
+              <ReferenceLine y={0} stroke="#666" strokeDasharray="2 2" />
+            </ComposedChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+      
+      {showIndicators.volume && (
+        <div className="bg-white rounded-lg border p-4">
+          <h3 className="text-sm font-medium text-gray-700 mb-2">Volume Analysis</h3>
+          <ResponsiveContainer width="100%" height={150}>
+            <ComposedChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+              <XAxis 
+                dataKey="timestamp"
+                type="number"
+                scale="time"
+                domain={['dataMin', 'dataMax']}
+                tickFormatter={formatXAxisTick}
+                stroke="#666"
+              />
+              <YAxis stroke="#666" />
+              <Tooltip 
+                labelFormatter={(timestamp) => new Date(timestamp).toLocaleDateString()}
+                contentStyle={{ 
+                  backgroundColor: 'white', 
+                  border: '1px solid #ccc',
+                  borderRadius: '8px'
+                }}
+              />
+              <Bar 
+                dataKey="volume" 
+                fill="#6b7280"
+                name="Volume"
+                fillOpacity={0.6}
+              />
+              <Line 
+                type="monotone" 
+                dataKey="volumeMA" 
+                stroke="#f59e0b" 
+                strokeWidth={2}
+                name="Volume MA"
+                dot={false}
+                connectNulls={false}
+              />
             </ComposedChart>
           </ResponsiveContainer>
         </div>

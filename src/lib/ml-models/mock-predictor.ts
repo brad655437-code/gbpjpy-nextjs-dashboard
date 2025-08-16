@@ -53,7 +53,7 @@ export class MockMLPredictor {
     const currentPrice = input.marketData[input.marketData.length - 1].close;
     const { ichimoku, rsi } = input.indicators;
 
-    const priceData = input.marketData.map(d => ({ high: d.high, low: d.low, close: d.close }));
+    const priceData = input.marketData.map(d => ({ high: d.high, low: d.low, close: d.close, volume: d.volume }));
     const analysis = analyzeTechnicals(priceData);
     const { combinedSignal, confidence } = analysis;
 
@@ -180,7 +180,7 @@ export class MockMLPredictor {
     
     for (let i = startIndex; i < marketData.length - 1; i++) {
       const historicalData = marketData.slice(0, i + 1);
-      const priceData = historicalData.map(d => ({ high: d.high, low: d.low, close: d.close }));
+      const priceData = historicalData.map(d => ({ high: d.high, low: d.low, close: d.close, volume: d.volume }));
       
       const analysis = analyzeTechnicals(priceData);
       
@@ -188,7 +188,11 @@ export class MockMLPredictor {
         marketData: historicalData,
         indicators: {
           ichimoku: analysis.ichimoku,
-          rsi: analysis.rsi
+          rsi: analysis.rsi,
+          macd: analysis.macd,
+          bollinger: analysis.bollinger,
+          fibonacci: analysis.fibonacci,
+          volume: analysis.volume
         }
       };
       

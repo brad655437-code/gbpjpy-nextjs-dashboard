@@ -21,6 +21,38 @@ export interface PredictionInput {
       value: number;
       signal: 'OVERBOUGHT' | 'OVERSOLD' | 'NEUTRAL';
     };
+    macd?: {
+      macd: number;
+      signal: number;
+      histogram: number;
+      signalType: 'BULLISH' | 'BEARISH' | 'NEUTRAL';
+    } | null;
+    bollinger?: {
+      upperBand: number;
+      middleBand: number;
+      lowerBand: number;
+      bandwidth: number;
+      squeeze: boolean;
+      signal: 'BULLISH' | 'BEARISH' | 'NEUTRAL';
+    } | null;
+    fibonacci?: {
+      swingHigh: number;
+      swingLow: number;
+      levels: {
+        level236: number;
+        level382: number;
+        level500: number;
+        level618: number;
+        level786: number;
+      };
+      signal: 'SUPPORT' | 'RESISTANCE' | 'NEUTRAL';
+    } | null;
+    volume?: {
+      volumeMA: number;
+      volumeOscillator: number;
+      volumeTrend: 'INCREASING' | 'DECREASING' | 'NEUTRAL';
+      signal: 'BULLISH' | 'BEARISH' | 'NEUTRAL';
+    } | null;
   };
 }
 
