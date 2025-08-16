@@ -618,11 +618,15 @@ export class TensorFlowPredictor {
    */
   async saveModels(): Promise<void> {
     try {
-      if (this.lstmModel) {
-        await this.lstmModel.save('localstorage://lstm-model');
-      }
-      if (this.technicalModel) {
-        await this.technicalModel.save('localstorage://technical-model');
+      if (typeof window !== 'undefined') {
+        if (this.lstmModel) {
+          await this.lstmModel.save('localstorage://lstm-model');
+        }
+        if (this.technicalModel) {
+          await this.technicalModel.save('localstorage://technical-model');
+        }
+      } else {
+        console.log('Skipping model save in server environment');
       }
     } catch (error) {
       console.error('Error saving models:', error);
@@ -634,8 +638,10 @@ export class TensorFlowPredictor {
    */
   async loadModels(): Promise<void> {
     try {
-      this.lstmModel = await tf.loadLayersModel('localstorage://lstm-model');
-      this.technicalModel = await tf.loadLayersModel('localstorage://technical-model');
+      if (typeof window !== 'undefined') {
+        this.lstmModel = await tf.loadLayersModel('localstorage://lstm-model');
+        this.technicalModel = await tf.loadLayersModel('localstorage://technical-model');
+      }
     } catch (error) {
       console.warn('Could not load saved models, will train new ones:', error);
     }
