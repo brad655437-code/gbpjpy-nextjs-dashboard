@@ -1,7 +1,8 @@
 
 import * as tf from '@tensorflow/tfjs';
 import '@tensorflow/tfjs-backend-cpu';
-// import { analyzeTechnicals } from '../indicators';
+import { analyzeTechnicals } from '../indicators';
+import { defaultFeatureEngineer } from './feature-engineering';
 import type {
   PredictionInput,
   PredictionOutput,
@@ -10,6 +11,13 @@ import type {
   ModelConfig,
   TrainingData
 } from './types';
+
+declare global {
+  var __tensorflowModels: {
+    lstm: tf.LayersModel | null;
+    technical: tf.LayersModel | null;
+  } | undefined;
+}
 
 export interface MLModelConfig {
   lstmUnits: number;
@@ -46,7 +54,7 @@ export interface EnhancedPredictionOutput extends PredictionOutput {
   };
 }
 
-export class TensorFlowPredictor {
+class TensorFlowPredictor {
   private lstmModel: tf.LayersModel | null = null;
   private technicalModel: tf.LayersModel | null = null;
   private ensembleModel: tf.LayersModel | null = null;
@@ -58,10 +66,15 @@ export class TensorFlowPredictor {
   private isTraining: boolean = false;
   private featureScaler: { mean: number[]; std: number[] } | null = null;
   
-  private static serverModels: {
-    lstm: tf.LayersModel | null;
-    technical: tf.LayersModel | null;
-  } = { lstm: null, technical: null };
+  private getGlobalModels() {
+    if (typeof window === 'undefined') {
+      if (!(globalThis as any).__tensorflowModels) {
+        (globalThis as any).__tensorflowModels = { lstm: null, technical: null };
+      }
+      return (globalThis as any).__tensorflowModels;
+    }
+    return null;
+  }
 
   constructor() {
     this.config = {
@@ -632,9 +645,12 @@ export class TensorFlowPredictor {
         }
         console.log('Models saved to browser localStorage');
       } else {
-        TensorFlowPredictor.serverModels.lstm = this.lstmModel;
-        TensorFlowPredictor.serverModels.technical = this.technicalModel;
-        console.log('Server environment: Models saved to memory');
+        const globalModels = this.getGlobalModels();
+        if (globalModels) {
+          globalModels.lstm = this.lstmModel;
+          globalModels.technical = this.technicalModel;
+          console.log('Server environment: Models saved to global memory');
+        }
       }
     } catch (error) {
       console.error('Error saving models:', error);
@@ -651,12 +667,15 @@ export class TensorFlowPredictor {
         this.technicalModel = await tf.loadLayersModel('localstorage://technical-model');
         console.log('Models loaded from browser localStorage');
       } else {
-        this.lstmModel = TensorFlowPredictor.serverModels.lstm;
-        this.technicalModel = TensorFlowPredictor.serverModels.technical;
-        if (this.lstmModel && this.technicalModel) {
-          console.log('Server environment: Models loaded from memory');
-        } else {
-          console.log('Server environment: No models in memory, will need training');
+        const globalModels = this.getGlobalModels();
+        if (globalModels) {
+          this.lstmModel = globalModels.lstm;
+          this.technicalModel = globalModels.technical;
+          if (this.lstmModel && this.technicalModel) {
+            console.log('Server environment: Models loaded from global memory');
+          } else {
+            console.log('Server environment: No models in global memory, will need training');
+          }
         }
       }
     } catch (error) {
