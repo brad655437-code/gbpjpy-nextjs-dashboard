@@ -225,13 +225,21 @@ export class ModelManager {
     const mlPerformance = tensorflowPredictor.getPerformance();
     const mockPerformance = mockPredictor.getPerformance();
     
-    if (mlPerformance.accuracy > this.config.autoSwitchThreshold && 
-        mlPerformance.accuracy > mockPerformance.accuracy + 0.05) {
+    if (this.lastTrainingDate && mlPerformance.totalPredictions === 0) {
       this.currentPredictor = 'tensorflow';
-      console.log('Switched to TensorFlow predictor (accuracy:', mlPerformance.accuracy, ')');
-    } else if (mockPerformance.accuracy > mlPerformance.accuracy + 0.1) {
-      this.currentPredictor = 'mock';
-      console.log('Switched to mock predictor (accuracy:', mockPerformance.accuracy, ')');
+      console.log('Switched to TensorFlow predictor after training to collect performance data');
+      return;
+    }
+    
+    if (mlPerformance.totalPredictions >= 10) {
+      if (mlPerformance.accuracy > this.config.autoSwitchThreshold && 
+          mlPerformance.accuracy > mockPerformance.accuracy + 0.05) {
+        this.currentPredictor = 'tensorflow';
+        console.log('Switched to TensorFlow predictor (accuracy:', mlPerformance.accuracy, ')');
+      } else if (mockPerformance.accuracy > mlPerformance.accuracy + 0.1) {
+        this.currentPredictor = 'mock';
+        console.log('Switched to mock predictor (accuracy:', mockPerformance.accuracy, ')');
+      }
     }
   }
 
