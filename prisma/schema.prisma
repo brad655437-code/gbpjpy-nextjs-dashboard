@@ -1,0 +1,61 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model MarketData {
+  id        String   @id @default(cuid())
+  date      DateTime @unique
+  open      Float
+  high      Float
+  low       Float
+  close     Float
+  volume    Float?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("market_data")
+}
+
+model Prediction {
+  id              String   @id @default(cuid())
+  date            DateTime @unique
+  predictedPrice  Float
+  actualPrice     Float?
+  direction       String   // "UP" or "DOWN"
+  confidence      Float    // 0.0 to 1.0
+  isCorrect       Boolean?
+  ichimokuSignal  String   // "BULLISH", "BEARISH", "NEUTRAL"
+  rsiValue        Float
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("predictions")
+}
+
+model ModelPerformance {
+  id            String   @id @default(cuid())
+  date          DateTime @unique
+  accuracy      Float    // Overall accuracy percentage
+  totalPredictions Int
+  correctPredictions Int
+  avgConfidence Float
+  profitLoss    Float?   // Simulated P&L
+  maxDrawdown   Float?
+  winRate       Float?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("model_performance")
+}

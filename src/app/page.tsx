@@ -1,103 +1,75 @@
-import Image from "next/image";
+import { PredictionCard } from '@/components/dashboard/prediction-card';
+import { PerformanceMetrics } from '@/components/dashboard/performance-metrics';
+import { BarChart3, TrendingUp, Brain } from 'lucide-react';
 
 export default function Home() {
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+      <div className="container mx-auto px-4 py-8">
+        <header className="text-center mb-8">
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <div className="p-3 bg-blue-600 rounded-full">
+              <Brain className="h-8 w-8 text-white" />
+            </div>
+            <h1 className="text-4xl font-bold text-gray-900">
+              GBP/JPY Prediction Dashboard
+            </h1>
+          </div>
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            AI-powered currency prediction using Ichimoku Cloud and RSI technical analysis. 
+            Monitor real-time predictions, track performance metrics, and analyze market trends.
+          </p>
+          <div className="mt-4 flex items-center justify-center gap-4 text-sm text-gray-500">
+            <div className="flex items-center gap-1">
+              <TrendingUp className="h-4 w-4" />
+              <span>Live Predictions</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <BarChart3 className="h-4 w-4" />
+              <span>Performance Tracking</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <Brain className="h-4 w-4" />
+              <span>ML-Powered Analysis</span>
+            </div>
+          </div>
+        </header>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+        <div className="space-y-8">
+          <section>
+            <h2 className="text-2xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
+              <TrendingUp className="h-6 w-6 text-blue-600" />
+              Today's Prediction
+            </h2>
+            <PredictionCard />
+          </section>
+
+          <section>
+            <h2 className="text-2xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
+              <BarChart3 className="h-6 w-6 text-green-600" />
+              Performance Analytics
+            </h2>
+            <PerformanceMetrics />
+          </section>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+
+        <footer className="mt-16 pt-8 border-t border-gray-200 text-center">
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+            <div className="text-yellow-800 font-semibold mb-2">⚠️ Important Disclaimer</div>
+            <div className="text-yellow-700 text-sm leading-relaxed">
+              This application is for educational and informational purposes only. The predictions and analysis 
+              provided should not be considered as financial advice. Currency trading involves substantial risk 
+              and may result in significant losses. Always consult with qualified financial professionals before 
+              making investment decisions.
+            </div>
+          </div>
+          
+          <div className="text-gray-500 text-sm">
+            <p>© 2025 GBP/JPY Prediction Dashboard. Built with Next.js, TypeScript, and Tailwind CSS.</p>
+            <p className="mt-1">Powered by Ichimoku Cloud and RSI technical analysis algorithms.</p>
+          </div>
+        </footer>
+      </div>
     </div>
   );
 }
