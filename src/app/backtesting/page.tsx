@@ -109,7 +109,7 @@ export default function BacktestingPage() {
 
   useEffect(() => {
     fetchBacktestData();
-  }, [selectedPeriod]);
+  }, [selectedPeriod, fetchBacktestData]);
 
   return (
     <div className="min-h-screen bg-gray-50">
