@@ -11,6 +11,19 @@ interface PredictionData {
   confidence: number;
   ichimokuSignal: 'BULLISH' | 'BEARISH' | 'NEUTRAL';
   rsiValue: number;
+  confidenceInterval?: {
+    lower: number;
+    upper: number;
+    confidence: number;
+  };
+  modelContributions?: {
+    lstm: number;
+    technical: number;
+    ensemble: number;
+  };
+  featureImportance?: {
+    [key: string]: number;
+  };
 }
 
 export function PredictionCard() {
@@ -171,6 +184,17 @@ export function PredictionCard() {
               <div className="text-xs text-gray-600 leading-relaxed">
                 <strong>Strategy:</strong> Ichimoku + RSI analysis suggests {prediction.direction.toLowerCase()} movement 
                 with {confidencePercentage}% confidence based on current cloud position and momentum indicators.
+                {prediction.confidenceInterval && (
+                  <div className="mt-2">
+                    <strong>Confidence Range:</strong> ¥{prediction.confidenceInterval.lower.toFixed(3)} - ¥{prediction.confidenceInterval.upper.toFixed(3)}
+                  </div>
+                )}
+                {prediction.modelContributions && (
+                  <div className="mt-2">
+                    <strong>Model Ensemble:</strong> LSTM {(prediction.modelContributions.lstm * 100).toFixed(0)}%, 
+                    Technical {(prediction.modelContributions.technical * 100).toFixed(0)}%
+                  </div>
+                )}
               </div>
             </div>
           </div>
