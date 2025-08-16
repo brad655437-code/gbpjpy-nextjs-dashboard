@@ -305,9 +305,11 @@ export class TensorFlowPredictor {
       const techLabels = tf.tensor2d([trainingData.labels[trainingData.labels.length - 1]], [1, 1]);
       
       console.log('Creating LSTM model...');
-      if (!this.lstmModel) {
-        this.lstmModel = this.createLSTMModel([this.mlConfig.sequenceLength, trainingData.features[0].length]);
+      if (this.lstmModel) {
+        this.lstmModel.dispose();
+        this.lstmModel = null;
       }
+      this.lstmModel = this.createLSTMModel([this.mlConfig.sequenceLength, trainingData.features[0].length]);
       
       console.log('Training LSTM model...');
       await this.lstmModel.fit(lstmFeatures, lstmLabels, {
@@ -318,9 +320,11 @@ export class TensorFlowPredictor {
       });
       
       console.log('Creating technical model...');
-      if (!this.technicalModel) {
-        this.technicalModel = this.createTechnicalModel([trainingData.features[0].length]);
+      if (this.technicalModel) {
+        this.technicalModel.dispose();
+        this.technicalModel = null;
       }
+      this.technicalModel = this.createTechnicalModel([trainingData.features[0].length]);
       
       console.log('Training technical model...');
       await this.technicalModel.fit(techFeatures, techLabels, {
