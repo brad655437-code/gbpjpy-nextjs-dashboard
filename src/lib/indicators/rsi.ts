@@ -138,13 +138,13 @@ export function calculateRSIWithSignal(
 export function calculateRSISeries(
   prices: number[],
   period: number = 14
-): number[] {
-  const results: number[] = [];
+): RSIData[] {
+  const results: RSIData[] = [];
   
   for (let i = period; i <= prices.length; i++) {
     const subset = prices.slice(0, i);
-    const rsi = calculateRSIWilder(subset, period);
-    results.push(rsi);
+    const rsiData = calculateRSIWithSignal(subset, period);
+    results.push(rsiData);
   }
   
   return results;

@@ -9,6 +9,7 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '20');
     const startDate = searchParams.get('startDate');
     const endDate = searchParams.get('endDate');
+    const forChart = searchParams.get('forChart') === 'true';
     
     if (page < 1 || limit < 1 || limit > 100) {
       return NextResponse.json(
@@ -42,7 +43,9 @@ export async function GET(request: NextRequest) {
     
     const startIndex = (page - 1) * limit;
     const endIndex = startIndex + limit;
-    const paginatedPredictions = filteredPredictions.slice(startIndex, endIndex);
+    const paginatedPredictions = forChart 
+      ? filteredPredictions
+      : filteredPredictions.slice(startIndex, endIndex);
     
     const totalCount = filteredPredictions.length;
     const totalPages = Math.ceil(totalCount / limit);

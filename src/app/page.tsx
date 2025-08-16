@@ -1,5 +1,6 @@
 import { PredictionCard } from '@/components/dashboard/prediction-card';
 import { PerformanceMetrics } from '@/components/dashboard/performance-metrics';
+import { InteractiveChart } from '@/components/charts';
 import { BarChart3, TrendingUp, Brain } from 'lucide-react';
 
 export default function Home() {
@@ -42,6 +43,14 @@ export default function Home() {
               Today&apos;s Prediction
             </h2>
             <PredictionCard />
+          </section>
+
+          <section>
+            <h2 className="text-2xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
+              <BarChart3 className="h-6 w-6 text-purple-600" />
+              Interactive Price Chart
+            </h2>
+            <InteractiveChart />
           </section>
 
           <section>
