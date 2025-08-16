@@ -57,6 +57,11 @@ export class TensorFlowPredictor {
   private predictionHistory: PredictionHistory[] = [];
   private isTraining: boolean = false;
   private featureScaler: { mean: number[]; std: number[] } | null = null;
+  
+  private static serverModels: {
+    lstm: tf.LayersModel | null;
+    technical: tf.LayersModel | null;
+  } = { lstm: null, technical: null };
 
   constructor() {
     this.config = {
@@ -614,7 +619,7 @@ export class TensorFlowPredictor {
   }
 
   /**
-   * Save models to browser storage
+   * Save models to browser storage (browser only) or server memory
    */
   async saveModels(): Promise<void> {
     try {
@@ -625,8 +630,11 @@ export class TensorFlowPredictor {
         if (this.technicalModel) {
           await this.technicalModel.save('localstorage://technical-model');
         }
+        console.log('Models saved to browser localStorage');
       } else {
-        console.log('Skipping model save in server environment');
+        TensorFlowPredictor.serverModels.lstm = this.lstmModel;
+        TensorFlowPredictor.serverModels.technical = this.technicalModel;
+        console.log('Server environment: Models saved to memory');
       }
     } catch (error) {
       console.error('Error saving models:', error);
@@ -634,17 +642,33 @@ export class TensorFlowPredictor {
   }
 
   /**
-   * Load models from browser storage
+   * Load models from browser storage (browser only) or server memory
    */
   async loadModels(): Promise<void> {
     try {
       if (typeof window !== 'undefined') {
         this.lstmModel = await tf.loadLayersModel('localstorage://lstm-model');
         this.technicalModel = await tf.loadLayersModel('localstorage://technical-model');
+        console.log('Models loaded from browser localStorage');
+      } else {
+        this.lstmModel = TensorFlowPredictor.serverModels.lstm;
+        this.technicalModel = TensorFlowPredictor.serverModels.technical;
+        if (this.lstmModel && this.technicalModel) {
+          console.log('Server environment: Models loaded from memory');
+        } else {
+          console.log('Server environment: No models in memory, will need training');
+        }
       }
     } catch (error) {
       console.warn('Could not load saved models, will train new ones:', error);
     }
+  }
+
+  /**
+   * Check if models are available for prediction
+   */
+  hasTrainedModels(): boolean {
+    return this.lstmModel !== null && this.technicalModel !== null;
   }
 }
 

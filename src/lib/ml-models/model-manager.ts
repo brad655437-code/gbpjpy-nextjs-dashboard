@@ -49,12 +49,13 @@ export class ModelManager {
     try {
       await tensorflowPredictor.loadModels();
       
-      const mlPerformance = tensorflowPredictor.getPerformance();
-      const mockPerformance = mockPredictor.getPerformance();
-      
-      if (mlPerformance.accuracy > this.config.autoSwitchThreshold && 
-          mlPerformance.accuracy > mockPerformance.accuracy) {
+      // Check if we have trained models available
+      if (tensorflowPredictor.hasTrainedModels()) {
+        console.log('ModelManager: TensorFlow models found, switching to TensorFlow predictor');
         this.currentPredictor = 'tensorflow';
+      } else {
+        console.log('ModelManager: No trained models found, using mock predictor');
+        this.currentPredictor = 'mock';
       }
       
       this.isInitialized = true;
@@ -73,17 +74,23 @@ export class ModelManager {
     
     await this.checkRetrainingNeeded();
     
+    console.log('ModelManager: Using predictor:', this.currentPredictor);
+    
     try {
       if (this.currentPredictor === 'tensorflow') {
-        return await tensorflowPredictor.predict(input);
+        console.log('ModelManager: Attempting TensorFlow prediction...');
+        const result = await tensorflowPredictor.predict(input);
+        console.log('ModelManager: TensorFlow prediction successful, type:', typeof result.confidenceInterval);
+        return result;
       } else {
+        console.log('ModelManager: Using mock predictor');
         return mockPredictor.predict(input);
       }
     } catch (error) {
       console.error('Error generating prediction with', this.currentPredictor, 'predictor:', error);
       
       if (this.currentPredictor === 'tensorflow') {
-        console.warn('Falling back to mock predictor');
+        console.warn('Falling back to mock predictor due to error:', error);
         return mockPredictor.predict(input);
       }
       
@@ -225,9 +232,9 @@ export class ModelManager {
     const mlPerformance = tensorflowPredictor.getPerformance();
     const mockPerformance = mockPredictor.getPerformance();
     
-    if (this.lastTrainingDate && mlPerformance.totalPredictions === 0) {
+    if (this.lastTrainingDate && tensorflowPredictor.hasTrainedModels()) {
       this.currentPredictor = 'tensorflow';
-      console.log('Switched to TensorFlow predictor after training to collect performance data');
+      console.log('ModelManager: Switched to TensorFlow predictor after successful training');
       return;
     }
     
@@ -335,12 +342,8 @@ export class ModelManager {
    */
   async isTensorFlowAvailable(): Promise<boolean> {
     try {
-      if (typeof window === 'undefined') {
-        return false; // Server-side rendering
-      }
-      
       const tf = await import('@tensorflow/tfjs');
-      return tf && typeof tf.tensor === 'function';
+      return tf && typeof tf.tensor === 'function' && tensorflowPredictor.hasTrainedModels();
     } catch {
       return false;
     }
