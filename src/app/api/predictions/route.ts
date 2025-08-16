@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { mockPredictor } from '@/lib/ml-models/mock-predictor';
-import { generateCompleteDataset, type PredictionData } from '@/lib/data/dummy-data';
+import { generateCompleteDataset } from '@/lib/data/dummy-data';
 
 export async function GET(request: NextRequest) {
   try {
