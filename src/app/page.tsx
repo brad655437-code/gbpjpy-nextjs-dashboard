@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { PredictionCard } from '@/components/dashboard/prediction-card';
 import { PerformanceMetrics } from '@/components/dashboard/performance-metrics';
 import { InteractiveChart } from '@/components/charts';
@@ -20,6 +21,15 @@ export default function Home() {
             AI-powered currency prediction using Ichimoku Cloud and RSI technical analysis. 
             Monitor real-time predictions, track performance metrics, and analyze market trends.
           </p>
+          <div className="mt-6">
+            <Link 
+              href="/backtesting" 
+              className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              <BarChart3 className="h-5 w-5" />
+              View Backtesting Analysis
+            </Link>
+          </div>
           <div className="mt-4 flex items-center justify-center gap-4 text-sm text-gray-500">
             <div className="flex items-center gap-1">
               <TrendingUp className="h-4 w-4" />
