@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { mockPredictor } from '@/lib/ml-models/mock-predictor';
+import { modelManager } from '@/lib/ml-models/model-manager';
 import { getCompleteDataset } from '@/lib/data/market-data';
-import type { ModelPerformanceMetrics } from '@/lib/ml-models/types';
+import type { ModelPerformanceMetrics, PredictionHistory } from '@/lib/ml-models/types';
 
 export async function GET(request: NextRequest) {
   try {
@@ -9,27 +9,28 @@ export async function GET(request: NextRequest) {
     const period = searchParams.get('period') || '30'; // days
     const includeBacktest = searchParams.get('includeBacktest') === 'true';
     
-    let predictions = mockPredictor.getPredictionHistory();
+    let predictions = modelManager.getPredictionHistory();
     
     if (predictions.length === 0) {
       const { marketData } = await getCompleteDataset(90);
+      const { mockPredictor } = await import('@/lib/ml-models/mock-predictor');
       predictions = mockPredictor.generateHistoricalPredictions(marketData);
     }
     
-    const performance = mockPredictor.getPerformance();
-    const modelState = mockPredictor.getModelState();
+    const performance = modelManager.getPerformance();
+    const modelState = modelManager.getModelState();
     
     const periodDays = parseInt(period);
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - periodDays);
     
-    const recentPredictions = predictions.filter(p => p.date >= cutoffDate);
-    const recentCorrect = recentPredictions.filter(p => p.isCorrect).length;
+    const recentPredictions = predictions.filter((p: PredictionHistory) => p.date >= cutoffDate);
+    const recentCorrect = recentPredictions.filter((p: PredictionHistory) => p.isCorrect).length;
     const recentAccuracy = recentPredictions.length > 0 
       ? (recentCorrect / recentPredictions.length) * 100 
       : 0;
     
-    const recentPnL = recentPredictions.reduce((sum, p) => sum + (p.profitLoss || 0), 0);
+    const recentPnL = recentPredictions.reduce((sum: number, p: PredictionHistory) => sum + (p.profitLoss || 0), 0);
     
     let currentStreak = 0;
     const sortedPredictions = [...predictions].sort((a, b) => b.date.getTime() - a.date.getTime());
@@ -83,7 +84,7 @@ export async function GET(request: NextRequest) {
         correctPredictions: recentCorrect,
         profitLoss: Number(recentPnL.toFixed(2)),
         avgConfidence: recentPredictions.length > 0 
-          ? Number((recentPredictions.reduce((sum, p) => sum + p.confidence, 0) / recentPredictions.length).toFixed(3))
+          ? Number((recentPredictions.reduce((sum: number, p: PredictionHistory) => sum + p.confidence, 0) / recentPredictions.length).toFixed(3))
           : 0
       },
       streaks: {
@@ -103,13 +104,13 @@ export async function GET(request: NextRequest) {
     };
     
     if (includeBacktest) {
-      const { marketData } = await getCompleteDataset(90);
+      // const { marketData } = await getCompleteDataset(90);
       const startDate = new Date();
       startDate.setDate(startDate.getDate() - 60);
       const endDate = new Date();
       endDate.setDate(endDate.getDate() - 1);
       
-      const backtestResult = mockPredictor.runBacktest(marketData, startDate, endDate);
+      const backtestResult = await modelManager.runBacktest(startDate, endDate);
       responseData.backtest = backtestResult;
     }
     
@@ -136,7 +137,7 @@ export async function POST(request: NextRequest) {
     const { action } = body;
     
     if (action === 'retrain') {
-      const modelState = mockPredictor.getModelState();
+      const modelState = modelManager.getModelState();
       
       modelState.config.lastTrained = new Date();
       
@@ -158,7 +159,7 @@ export async function POST(request: NextRequest) {
         }
       });
     } else if (action === 'reset') {
-      const performance = mockPredictor.getPerformance();
+      const performance = modelManager.getPerformance();
       performance.accuracy = 72.5;
       performance.totalPredictions = 0;
       performance.correctPredictions = 0;

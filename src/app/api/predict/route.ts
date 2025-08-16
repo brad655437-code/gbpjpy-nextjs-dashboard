@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { mockPredictor } from '@/lib/ml-models/mock-predictor';
+import { modelManager } from '@/lib/ml-models/model-manager';
 import { getCompleteDataset } from '@/lib/data/market-data';
 import type { PredictionInput } from '@/lib/ml-models/types';
 
@@ -17,14 +17,14 @@ export async function GET() {
       }
     };
     
-    const prediction = mockPredictor.predict(input);
+    const prediction = await modelManager.predict(input);
     
     return NextResponse.json({
       success: true,
       data: {
         prediction,
         timestamp: new Date().toISOString(),
-        modelVersion: mockPredictor.getModelState().config.version
+        modelVersion: modelManager.getModelState().config.version
       }
     });
   } catch (error) {
@@ -71,14 +71,14 @@ export async function POST(request: NextRequest) {
       }
     };
     
-    const prediction = mockPredictor.predict(input);
+    const prediction = await modelManager.predict(input);
     
     return NextResponse.json({
       success: true,
       data: {
         prediction,
         timestamp: new Date().toISOString(),
-        modelVersion: mockPredictor.getModelState().config.version
+        modelVersion: modelManager.getModelState().config.version
       }
     });
   } catch (error) {

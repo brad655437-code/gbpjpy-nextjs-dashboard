@@ -372,6 +372,30 @@ export function InteractiveChart({ height = 600 }: InteractiveChartProps) {
               />
             ))}
             
+            {showIndicators.predictions && (
+              <Area
+                type="monotone"
+                dataKey="predictionUpper"
+                stroke="#3b82f6"
+                fill="#3b82f6"
+                fillOpacity={0.1}
+                name="Prediction Upper Bound"
+                connectNulls={false}
+              />
+            )}
+            
+            {showIndicators.predictions && (
+              <Area
+                type="monotone"
+                dataKey="predictionLower"
+                stroke="#3b82f6"
+                fill="#3b82f6"
+                fillOpacity={0.1}
+                name="Prediction Lower Bound"
+                connectNulls={false}
+              />
+            )}
+            
             <Brush 
               dataKey="timestamp"
               height={30}

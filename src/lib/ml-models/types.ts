@@ -131,6 +131,39 @@ export interface PredictionHistory {
   createdAt: Date;
 }
 
+export interface EnhancedPredictionOutput extends PredictionOutput {
+  confidenceInterval: {
+    lower: number;
+    upper: number;
+    confidence: number;
+  };
+  modelContributions: {
+    lstm: number;
+    technical: number;
+    ensemble: number;
+  };
+  featureImportance: {
+    [key: string]: number;
+  };
+}
+
+export interface MLModelConfig {
+  lstmUnits: number;
+  denseUnits: number;
+  dropoutRate: number;
+  learningRate: number;
+  batchSize: number;
+  epochs: number;
+  sequenceLength: number;
+  validationSplit: number;
+}
+
+export interface EnsembleConfig {
+  models: string[];
+  weights: number[];
+  method: 'weighted_average' | 'voting' | 'stacking';
+}
+
 export interface ModelState {
   isTraining: boolean;
   lastPrediction?: PredictionOutput;
