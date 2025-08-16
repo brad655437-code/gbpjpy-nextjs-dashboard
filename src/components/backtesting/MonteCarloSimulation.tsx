@@ -61,45 +61,58 @@ export function MonteCarloSimulation({
 
     const simResults: MonteCarloResult[] = [];
 
-    for (let sim = 0; sim < numSimulations; sim++) {
-      let currentValue = initialCapital;
-      let peak = initialCapital;
-      let maxDrawdown = 0;
-      const path: Array<{ day: number; value: number }> = [{ day: 0, value: initialCapital }];
+    const runBatch = (startSim: number, batchSize: number): Promise<void> => {
+      return new Promise((resolve) => {
+        const processBatch = () => {
+          const endSim = Math.min(startSim + batchSize, numSimulations);
+          
+          for (let sim = startSim; sim < endSim; sim++) {
+            let currentValue = initialCapital;
+            let peak = initialCapital;
+            let maxDrawdown = 0;
+            const path: Array<{ day: number; value: number }> = [{ day: 0, value: initialCapital }];
 
-      for (let day = 1; day <= tradingDays; day++) {
-        const isWin = Math.random() < winRate;
-        const tradeResult = isWin ? avgWin : -avgLoss;
-        
-        const volatility = 0.8 + Math.random() * 0.4;
-        const adjustedResult = tradeResult * volatility;
-        
-        currentValue += adjustedResult;
-        
-        if (currentValue > peak) {
-          peak = currentValue;
-        }
-        
-        const drawdown = ((peak - currentValue) / peak) * 100;
-        if (drawdown > maxDrawdown) {
-          maxDrawdown = drawdown;
-        }
+            for (let day = 1; day <= tradingDays; day++) {
+              const isWin = Math.random() < winRate;
+              const tradeResult = isWin ? avgWin : -avgLoss;
+              
+              const volatility = 0.8 + Math.random() * 0.4;
+              const adjustedResult = tradeResult * volatility;
+              
+              currentValue += adjustedResult;
+              
+              if (currentValue > peak) {
+                peak = currentValue;
+              }
+              
+              const drawdown = ((peak - currentValue) / peak) * 100;
+              if (drawdown > maxDrawdown) {
+                maxDrawdown = drawdown;
+              }
 
-        if (day % 10 === 0 || day === tradingDays) {
-          path.push({ day, value: currentValue });
-        }
-      }
+              if (day % 10 === 0 || day === tradingDays) {
+                path.push({ day, value: currentValue });
+              }
+            }
 
-      simResults.push({
-        simulation: sim,
-        finalValue: currentValue,
-        maxDrawdown,
-        path
+            simResults.push({
+              simulation: sim,
+              finalValue: currentValue,
+              maxDrawdown,
+              path
+            });
+          }
+          
+          resolve();
+        };
+
+        setTimeout(processBatch, 0);
       });
+    };
 
-      if (sim % 100 === 0) {
-        await new Promise(resolve => setTimeout(resolve, 1));
-      }
+    const batchSize = 50;
+    for (let i = 0; i < numSimulations; i += batchSize) {
+      await runBatch(i, batchSize);
     }
 
     const finalValues = simResults.map(r => r.finalValue).sort((a, b) => a - b);
@@ -144,7 +157,7 @@ export function MonteCarloSimulation({
   const getPathData = () => {
     if (!results.length || !showPaths) return [];
 
-    const samplePaths = results.slice(0, 50);
+    const samplePaths = results.slice(0, 10);
     const maxDays = Math.max(...samplePaths.flatMap(r => r.path.map(p => p.day)));
     
     const pathData: Array<Record<string, number>> = [];
@@ -330,15 +343,15 @@ export function MonteCarloSimulation({
                     formatter={(value) => [formatCurrency(Number(value)), 'Simulation Path']}
                     labelFormatter={(value) => `Day ${value}`}
                   />
-                  {Array.from({ length: 50 }, (_, i) => (
+                  {Array.from({ length: 10 }, (_, i) => (
                     <Line
                       key={i}
                       type="monotone"
                       dataKey={`path${i}`}
-                      stroke={`hsl(${(i * 137.5) % 360}, 70%, 50%)`}
-                      strokeWidth={1}
+                      stroke={`hsl(${(i * 36) % 360}, 70%, 50%)`}
+                      strokeWidth={2}
                       dot={false}
-                      strokeOpacity={0.6}
+                      strokeOpacity={0.8}
                     />
                   ))}
                 </LineChart>
