@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { mockPredictor } from '@/lib/ml-models/mock-predictor';
-import { generateCompleteDataset } from '@/lib/data/dummy-data';
+import { getCompleteDataset } from '@/lib/data/market-data';
 import type { PredictionInput } from '@/lib/ml-models/types';
 
 export async function GET() {
   try {
-    const { marketData } = generateCompleteDataset(90);
+    const { marketData } = await getCompleteDataset(90);
     
     const recentData = marketData.slice(-60); // Last 60 days for context
     

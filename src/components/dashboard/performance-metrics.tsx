@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
 import { TrendingUp, Target, DollarSign, AlertTriangle, BarChart3 } from 'lucide-react';
 
@@ -36,11 +36,7 @@ export function PerformanceMetrics() {
   const [error, setError] = useState<string | null>(null);
   const [selectedPeriod, setSelectedPeriod] = useState('30');
 
-  useEffect(() => {
-    fetchPerformanceData();
-  }, [selectedPeriod]);
-
-  const fetchPerformanceData = async () => {
+  const fetchPerformanceData = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch(`/api/performance?period=${selectedPeriod}`);
@@ -56,7 +52,11 @@ export function PerformanceMetrics() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedPeriod]);
+
+  useEffect(() => {
+    fetchPerformanceData();
+  }, [fetchPerformanceData]);
 
   if (loading) {
     return (

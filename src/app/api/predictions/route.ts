@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { mockPredictor } from '@/lib/ml-models/mock-predictor';
-import { generateCompleteDataset } from '@/lib/data/dummy-data';
+import { getCompleteDataset } from '@/lib/data/market-data';
 
 export async function GET(request: NextRequest) {
   try {
@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
     let predictions = mockPredictor.getPredictionHistory();
     
     if (predictions.length === 0) {
-      const { marketData } = generateCompleteDataset(90);
+      const { marketData } = await getCompleteDataset(90);
       predictions = mockPredictor.generateHistoricalPredictions(marketData);
     }
     
