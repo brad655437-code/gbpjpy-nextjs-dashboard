@@ -101,7 +101,7 @@ export class ModelManager {
   /**
    * Train TensorFlow models with historical data
    */
-  async trainModels(_forceRetrain: boolean = false): Promise<void> {
+  async trainModels(forceRetrain: boolean = false): Promise<void> {
     try {
       console.log('ModelManager: Starting training process...');
       

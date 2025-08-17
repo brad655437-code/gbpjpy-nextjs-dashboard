@@ -7,7 +7,13 @@ import { Brain, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 
 export default function MLTestPage() {
-  const [testResults, setTestResults] = useState<any>(null);
+  const [testResults, setTestResults] = useState<{
+    success: boolean;
+    version?: string;
+    tensorTest?: number[];
+    message: string;
+    error?: string;
+  } | null>(null);
   const [loading, setLoading] = useState(false);
 
   const testTensorFlowJS = async () => {
@@ -100,7 +106,7 @@ export default function MLTestPage() {
                     {testResults.success && (
                       <div className="mt-2 text-sm text-green-700">
                         <p>Version: {testResults.version}</p>
-                        <p>Tensor test result: [{testResults.tensorTest.join(', ')}]</p>
+                        <p>Tensor test result: [{testResults.tensorTest?.join(', ') || 'N/A'}]</p>
                       </div>
                     )}
                     {!testResults.success && (

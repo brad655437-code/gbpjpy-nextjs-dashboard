@@ -1,7 +1,6 @@
 
 import * as tf from '@tensorflow/tfjs';
 import '@tensorflow/tfjs-backend-cpu';
-import { analyzeTechnicals } from '../indicators';
 import { defaultFeatureEngineer } from './feature-engineering';
 import type {
   PredictionInput,
@@ -66,12 +65,12 @@ class TensorFlowPredictor {
   private isTraining: boolean = false;
   private featureScaler: { mean: number[]; std: number[] } | null = null;
   
-  private getGlobalModels() {
+  private getGlobalModels(): { lstm: tf.LayersModel | null; technical: tf.LayersModel | null } | null {
     if (typeof window === 'undefined') {
-      if (!(globalThis as any).__tensorflowModels) {
-        (globalThis as any).__tensorflowModels = { lstm: null, technical: null };
+      if (!(globalThis as typeof globalThis & { __tensorflowModels?: { lstm: tf.LayersModel | null; technical: tf.LayersModel | null } }).__tensorflowModels) {
+        (globalThis as typeof globalThis & { __tensorflowModels: { lstm: tf.LayersModel | null; technical: tf.LayersModel | null } }).__tensorflowModels = { lstm: null, technical: null };
       }
-      return (globalThis as any).__tensorflowModels;
+      return (globalThis as typeof globalThis & { __tensorflowModels: { lstm: tf.LayersModel | null; technical: tf.LayersModel | null } }).__tensorflowModels;
     }
     return null;
   }
@@ -128,85 +127,26 @@ class TensorFlowPredictor {
    * Feature engineering: Extract meaningful features from market data and technical indicators
    */
   private extractFeatures(input: PredictionInput): number[][] {
-    const features: number[][] = [];
-    const { marketData, indicators } = input;
+    const featureSet = defaultFeatureEngineer.extractFeatures(input);
     
-    const prices = marketData.map(d => d.close);
-    const volumes = marketData.map(d => d.volume || 0);
-    const highs = marketData.map(d => d.high);
-    const lows = marketData.map(d => d.low);
-    
-    const priceData = marketData.map(d => ({ 
-      high: d.high, 
-      low: d.low, 
-      close: d.close, 
-      volume: d.volume 
-    }));
-    
-    for (let i = this.mlConfig.sequenceLength; i < marketData.length; i++) {
-      const sequenceFeatures: number[] = [];
-      
-      const priceSequence = prices.slice(i - this.mlConfig.sequenceLength, i);
-      const priceReturns = this.calculateReturns(priceSequence);
-      sequenceFeatures.push(...priceReturns);
-      
-      const volumeSequence = volumes.slice(i - this.mlConfig.sequenceLength, i);
-      const volumeNormalized = this.normalizeSequence(volumeSequence);
-      sequenceFeatures.push(...volumeNormalized);
-      
-      if (indicators.ichimoku) {
-        sequenceFeatures.push(
-          indicators.ichimoku.tenkanSen / prices[i],
-          indicators.ichimoku.kijunSen / prices[i],
-          indicators.ichimoku.senkouSpanA / prices[i],
-          indicators.ichimoku.senkouSpanB / prices[i],
-          indicators.ichimoku.signal === 'BULLISH' ? 1 : indicators.ichimoku.signal === 'BEARISH' ? -1 : 0
-        );
-      }
-      
-      if (indicators.rsi) {
-        sequenceFeatures.push(indicators.rsi.value / 100);
-      }
-      
-      if (indicators.macd) {
-        sequenceFeatures.push(
-          indicators.macd.macd,
-          indicators.macd.signal,
-          indicators.macd.histogram,
-          indicators.macd.signalType === 'BULLISH' ? 1 : indicators.macd.signalType === 'BEARISH' ? -1 : 0
-        );
-      }
-      
-      if (indicators.bollinger) {
-        const currentPrice = prices[i];
-        sequenceFeatures.push(
-          (currentPrice - indicators.bollinger.lowerBand) / (indicators.bollinger.upperBand - indicators.bollinger.lowerBand),
-          indicators.bollinger.bandwidth,
-          indicators.bollinger.squeeze ? 1 : 0
-        );
-      }
-      
-      if (indicators.fibonacci) {
-        const currentPrice = prices[i];
-        const fibRange = indicators.fibonacci.swingHigh - indicators.fibonacci.swingLow;
-        sequenceFeatures.push(
-          (currentPrice - indicators.fibonacci.levels.level236) / fibRange,
-          (currentPrice - indicators.fibonacci.levels.level382) / fibRange,
-          (currentPrice - indicators.fibonacci.levels.level618) / fibRange
-        );
-      }
-      
-      if (indicators.volume) {
-        sequenceFeatures.push(
-          indicators.volume.volumeOscillator,
-          indicators.volume.volumeTrend === 'INCREASING' ? 1 : indicators.volume.volumeTrend === 'DECREASING' ? -1 : 0
-        );
-      }
-      
-      features.push(sequenceFeatures);
+    if (featureSet.combinedFeatures.length === 0) {
+      return [];
     }
     
-    return features;
+    const sequences: number[][] = [];
+    const sequenceLength = this.mlConfig.sequenceLength;
+    
+    // For single prediction, return the combined features as a sequence
+    if (featureSet.combinedFeatures.length >= sequenceLength) {
+      for (let i = sequenceLength; i <= featureSet.combinedFeatures.length; i++) {
+        sequences.push(featureSet.combinedFeatures.slice(i - sequenceLength, i));
+      }
+    } else {
+      const paddedFeatures = [...Array(sequenceLength - featureSet.combinedFeatures.length).fill(0), ...featureSet.combinedFeatures];
+      sequences.push(paddedFeatures);
+    }
+    
+    return sequences;
   }
 
   /**
